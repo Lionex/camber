@@ -1,5 +1,7 @@
 # Camber
 
+[![Build Status](https://travis-ci.org/Lionex/camber.svg?branch=master)](https://travis-ci.org/Lionex/camber)
+
 > **Camber**: _v._ to curve 
 
 Camber is a curve interpolation library.

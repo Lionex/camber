@@ -1,7 +1,13 @@
 [package]
-name = "camber"
+name    = "camber"
 version = "0.1.0"
 authors = ["Gwen Lofman <Gwen@Lofman.co>"]
+license = "MIT"
+readme  = "README.md"
+
+repository = "https://github.com/Lionex/camber.git"
+
+keywords = ["curve", "interpolation"]
 
 [dependencies]
 
