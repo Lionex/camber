@@ -1,5 +1,7 @@
 # Camber
 
+> **Camber**: _v._ to curve 
+
 Camber is a curve interpolation library.
 
 As it stands, this library is an exercise in implementing the following types of polynomial interpolations:
