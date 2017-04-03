@@ -20,5 +20,5 @@ If I'm successful and figure out an interesting or particularly useful interface
 
 ## References
 
-Lengyel, Eric; _Mathematics for 3D Programming and Computer Graphics_
+Lengyel, Eric; _Mathematics for 3D Game Programming and Computer Graphics_
 
