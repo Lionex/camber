@@ -1,6 +1,6 @@
 //! > **Camber**: _v._ to curve (an object)
 //!
-//! `Camber` is a curve interpolation library that provides methods to generate a
+//! `Camber` is a curve interpolation library that provides methods to generate
 //! various types of interpolationg polynomials along with a set of related
 //! utilities developed under MIT license as an educational project.
 //!
@@ -19,9 +19,41 @@
 //! - Non-Uniform B Splines
 //! - Non-Uniform Rational B Splines
 
+
+/// Evaluate a polynomial defined by its coefficients in the order _a\_n..a\_0_
+///
+/// Has O(n) time complexity given n coefficients using _Horner's Rule_.
+pub fn poly_eval(coefficients: &Vec<f64>, x: f64) -> f64 {
+    // From the form: p(x) = (((a_n*x + a_n-1)*x + ... + a_2)*x + a_1)*x + a_0
+    coefficients.iter().fold(0., |b,c| (x*b) + c)
+}
+
 #[cfg(test)]
-mod tests {
+mod poly_eval_test {
+    use super::*;
+    use test::Bencher;
+
     #[test]
-    fn it_works() {
+    // Test poly_eval's ability to compute p(x) = x^3 defined by coefficients
+    fn simple_cubic() {
+        let qubic = vec![1.,0.,0.,0.];
+        for n in -10..10 {
+            let m = poly_eval(&qubic, n.into());
+            assert!((m - f64::from(n).powi(3)).abs() < 1e-10,"{}^3 != {}",n,m);
+        }
+    }
+
+    #[test]
+    // Running with an empty vector represents the constant 0, so we expect 0
+    fn empty_coefficient_vector() {
+        let poly = vec![0.;0];
+        assert_eq!(poly_eval(&poly, 1.),0.,"Empty vec evaluation is nonzero");
+    }
+
+    #[test]
+    // A vector of all zeros should return zero
+    fn zero_coefficient_vector() {
+        let poly = vec![0.;11];
+        assert_eq!(poly_eval(&poly, 1.),0.,"Zero vec evaluation is nonzero");
     }
 }
