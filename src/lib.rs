@@ -56,4 +56,28 @@ mod poly_eval_test {
         let poly = vec![0.;11];
         assert_eq!(poly_eval(&poly, 1.),0.,"Zero vec evaluation is nonzero");
     }
+
+    #[bench]
+    fn degree_2(b: &mut Bencher) {
+        let poly = vec![1.; 3];
+        b.iter(|| poly_eval(&poly, 1.));
+    }
+
+    #[bench]
+    fn degree_8(b: &mut Bencher) {
+        let poly = vec![1.; 9];
+        b.iter(|| poly_eval(&poly, 1.));
+    }
+
+    #[bench]
+    fn degree_16(b: &mut Bencher) {
+        let poly = vec![1.; 17];
+        b.iter(|| poly_eval(&poly, 1.))
+    }
+
+    #[bench]
+    fn degree_32(b: &mut Bencher) {
+        let poly = vec![1.; 33];
+        b.iter(|| poly_eval(&poly, 1.))
+    }
 }
