@@ -19,7 +19,6 @@
 //! - Non-Uniform B Splines
 //! - Non-Uniform Rational B Splines
 
-
 /// Evaluate a polynomial defined by its coefficients in the order _a\_n..a\_0_
 ///
 /// Has O(n) time complexity given n coefficients using _Horner's Rule_.
@@ -31,7 +30,6 @@ pub fn poly_eval(coefficients: &Vec<f64>, x: f64) -> f64 {
 #[cfg(test)]
 mod poly_eval_test {
     use super::*;
-    use test::Bencher;
 
     #[test]
     // Test poly_eval's ability to compute p(x) = x^3 defined by coefficients
@@ -55,29 +53,5 @@ mod poly_eval_test {
     fn zero_coefficient_vector() {
         let poly = vec![0.;11];
         assert_eq!(poly_eval(&poly, 1.),0.,"Zero vec evaluation is nonzero");
-    }
-
-    #[bench]
-    fn degree_2(b: &mut Bencher) {
-        let poly = vec![1.; 3];
-        b.iter(|| poly_eval(&poly, 1.));
-    }
-
-    #[bench]
-    fn degree_8(b: &mut Bencher) {
-        let poly = vec![1.; 9];
-        b.iter(|| poly_eval(&poly, 1.));
-    }
-
-    #[bench]
-    fn degree_16(b: &mut Bencher) {
-        let poly = vec![1.; 17];
-        b.iter(|| poly_eval(&poly, 1.))
-    }
-
-    #[bench]
-    fn degree_32(b: &mut Bencher) {
-        let poly = vec![1.; 33];
-        b.iter(|| poly_eval(&poly, 1.))
     }
 }
