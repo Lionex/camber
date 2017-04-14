@@ -1,8 +1,52 @@
 //! Utility functions to use in conjunction with the curve interpolation tools.
 
-/// Evaluate a polynomial from its coefficients in the order `a[n] .. a[0]`
+/// Evaluate a polynomial from its coefficients
 ///
-/// Has O(n) time complexity given n coefficients using _Horner's Rule_.
+/// A polynomial of degree _n_ has _n_+1 coefficients.  Providing a single
+/// coefficient is the same as a constant function.
+/// Achieves O(n) time complexity given n coefficients using _Horner's Rule_.
+///
+/// - `coefficients`: vector of coeffients in the order `a[n] .. a[0]`
+/// - `x`: the desired input for the polynomial
+///
+/// # Examples
+///
+/// Starting with a simple polynomial _p(x) = x^2 + 6x + 3_, we make a vector
+/// of its coefficients.
+///
+/// ```
+/// # use camber::poly_eval;
+/// let poly = vec![1.,6.,3.];
+/// #
+/// # assert!(poly_eval(&poly, 0.) == 3.);
+/// # assert!(poly_eval(&poly, 1.) == 10.);
+/// ```
+///
+/// The easiest two points solve for by hand are usually _1_ and _0_; for our
+/// particular polynomial, _p(0) = 3_ and _p(1) = 10_.  Running `poly_eval` with
+/// these in mind we have:
+///
+/// ```
+/// # use camber::poly_eval;
+/// # let poly = vec![1.,6.,3.];
+/// #
+/// assert!(poly_eval(&poly, 0.) == 3.);
+/// assert!(poly_eval(&poly, 1.) == 10.);
+/// ```
+///
+/// `poly_eval` is especially useful in cases where you have interpolated a
+/// polynomial with some method and have obtained a list of coefficients and
+/// want to get those values over a range.  Using the same polynomial from
+/// before we can do things like evaluate values from _0_ to _10_ with steps of
+/// _0.1_.
+///
+/// ```
+/// # use camber::poly_eval;
+/// # let poly = vec![1.,6.,3.];
+/// #
+/// (0..100).map(|x| poly_eval(&poly, f64::from(x)*0.1));
+/// ```
+///
 pub fn poly_eval(coefficients: &Vec<f64>, x: f64) -> f64 {
     // From the form: p(x) = (((a_n*x + a_n-1)*x + ... + a_2)*x + a_1)*x + a_0
     coefficients.iter().fold(0., |b,c| (x*b) + c)
