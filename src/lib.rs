@@ -1,6 +1,6 @@
 //! > **Camber**: _v._ to curve (an object)
 //!
-//! `Camber` is a curve interpolation library that provides methods to generate a
+//! `Camber` is a curve interpolation library that provides methods to generate
 //! various types of interpolationg polynomials along with a set of related
 //! utilities developed under MIT license as an educational project.
 //!
@@ -19,9 +19,6 @@
 //! - Non-Uniform B Splines
 //! - Non-Uniform Rational B Splines
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-    }
-}
+mod utility;
+
+pub use utility::{poly_eval};
