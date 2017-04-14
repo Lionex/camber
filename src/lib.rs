@@ -19,6 +19,7 @@
 //! - Non-Uniform B Splines
 //! - Non-Uniform Rational B Splines
 
+pub mod curve;
 mod utility;
 
 pub use utility::{poly_eval};
