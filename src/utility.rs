@@ -80,3 +80,84 @@ mod poly_eval {
         assert_eq!(poly_eval(&poly, 1.),0.,"Zero vec evaluation is nonzero");
     }
 }
+
+/// Create an inclusive range of with the desired number of elements
+///
+/// Linspace can handle ranges in any direction, and even constant ranges like
+/// `linspace(1.,1.,100);`  Linspace is also guaranteed to stay within the start
+/// and end bounds.  It's useful for providing ranges over which to evaluate
+/// polynomials.  A range with zero elements simply returns an empty vector.
+///
+/// _O(n)_ time complexity.
+///
+/// - `start`: The first value of the range
+/// - `end`: The last value of the range
+/// - `numel`: The number of elements in the range
+///
+/// # Examples
+///
+/// To get 100 floating point numbers between zero and one, including zero and
+/// one, we can do:
+///
+/// ```
+/// # use camber::linspace;
+/// linspace(0.,1.,100);
+/// ```
+///
+/// We can do some more intersting things like evaluate a polynomial over some
+/// range of x values
+///
+/// ```
+/// # use camber::{linspace, poly_eval};
+/// let xs = linspace(0.,1.,100);
+/// let ys: Vec<f64> = xs.iter()
+///     .map(|t| poly_eval(&vec![1.,0.,0.],*t)) // f(x) = x^2
+///     .collect();
+/// ```
+/// or with a for loop:
+/// ```
+/// # use camber::{linspace, poly_eval};
+/// let ys = for t in linspace(0.,1.,100) {
+///     poly_eval(&vec![1.,0.,0.], t); // f(x) = x^2
+/// };
+/// ```
+pub fn linspace(start: f64, end: f64, numel: u32) -> Vec<f64> {
+    let n = f64::from(numel);
+    // Given some desired start _s_ and end _e_, parameterize
+    // _f(t) = s*(1-t) + e*(t)_ so _f(0) = s_ and _f(1) = e_,  then map over the
+    // desired number of elements, and divide t by the number of elements to
+    // retain the start and end bounds.
+    (1..numel+1)
+        .map(|t| (start*(1.-f64::from(t)/n) + end*f64::from(t)/n))
+        .collect()
+}
+
+#[cfg(test)]
+mod linspace {
+    use super::linspace;
+
+    #[test]
+    fn zero_elements() {
+        assert_eq!(linspace(0.,0.,0).len(), 0);
+    }
+
+    #[test]
+    fn constant_range() {
+        for el in linspace(1.,1.,1000000) {
+            assert_eq!(el,1.);
+        }
+    }
+
+    #[test]
+    fn respects_boundaries() {
+        let (start,end) = (0.,1.);
+        for el in linspace(start,end,1000000) {
+            assert!(f64::from(start) <= el && el <= f64::from(end));
+        }
+    }
+
+    #[test]
+    fn correct_length() {
+        assert_eq!(linspace(0.,1.,1000000).len(), 1000000);
+    }
+}
