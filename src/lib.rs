@@ -5,4 +5,4 @@
 
 mod utility;
 
-pub use utility::{poly_eval};
+pub use utility::{poly_eval, linspace};
