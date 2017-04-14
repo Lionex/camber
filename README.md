@@ -25,6 +25,7 @@ If I'm successful and figure out an interesting or particularly useful interface
 ## References
 
 Lengyel, Eric; _Mathematics for 3D Game Programming and Computer Graphics_
+Joy, Kenneth I; [_On-Line Geometric Modeling Notes: Bernstein Polynomials_](http://www.idav.ucdavis.edu/education/CAGDNotes/Bernstein-Polynomials.pdf)
 
 ## Contributing
 
