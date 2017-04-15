@@ -22,3 +22,71 @@
 //!
 //! [1]: https://en.wikipedia.org/wiki/Runge%27s_phenomenon
 //! [2]: http://idav.ucdavis.edu/education/CAGDNotes/CAGDNotes/homepage.html
+
+/// Create a bernstein polynomial _B(t)_ defined for _0 <= t <= 1_
+///
+/// For any degreen n, n+1 bernstein polynomials exist.  Summing all of them
+/// together for any _t_ where _0 <= t <= 1_ results in a value of one.  These
+/// polynomials often serve as belnding functions for a curve that interpolates
+/// _n+1_ points with a polynomial of degree _n_.
+///
+/// - `n`: the degree of the berinstein polynomial, must be less than 13 to
+///   prevent overflow.
+/// - `k`: identifies a particular bernstein polynomial where _0 <= k <= n_
+/// - `t`: the specific point at which to evaluate the polynomial.
+///
+/// Notable properties of the Bernstein Polynomials include:
+/// - All Bernstein polynomials are Non-Negative from _0 <= t <= 1_
+/// - Any of the lower-degree Bernstein polynomials (degree < n) can be
+///   expressed as a linear combination of Bernstein polynomials of degree n
+/// - Derivatives of the _n_th degree Bernstein polynomials are polynomials of
+///   degree _n−1_.
+///
+/// For a more comprehensive discussion, see [Kenneth Joy's notes.][1]
+///
+/// # Examples
+///
+/// [1]: http://idav.ucdavis.edu/education/CAGDNotes/Bernstein-Polynomials.pdf
+pub fn bernstein(n: i32, k: i32,t: f64) -> f64 {
+    assert!(0 <= k && k <= n);
+    f64::from(choose(n,k)) * t.powi(k) * (1.-t).powi(n - k)
+}
+
+fn factorial(n: i32) -> i32 { (1..n+1).fold(1, |f, n| f*n) }
+
+fn choose(n: i32, k: i32) -> i32 {
+    factorial(n) / (factorial(n-k)*factorial(k))
+}
+
+#[cfg(test)]
+mod bernstein {
+    use super::bernstein;
+    use utility::*;
+
+    #[test]
+    fn non_negative() {
+        for t in linspace(0.,1.,100) {
+            assert!(bernstein(1,1,t) >= 0.);
+        }
+    }
+
+    #[test]
+    // For any value t, all of the berinstein polynomials of degree n should sum
+    // to 1, forming a partition of unity.
+    fn partition_of_unity() {
+        for n in 0..13 {
+            for t in linspace(0.,1.,100) {
+                // Sum all of the berinstein polynomials of degree n together
+                let unit = (0..n+1).map(|k|bernstein(n,k,t)).fold(0.,|s,v|s+v);
+                assert!((unit - 1.).abs() < 1e-3, "Expected 1 got {}", unit);
+            }
+        }
+    }
+
+    #[test]
+    #[should_panic]
+    fn large_n() {
+        let n = 13;
+        assert!(bernstein(n,n,1.) == 1.);
+    }
+}
