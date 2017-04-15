@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/Lionex/camber.svg?branch=master)](https://travis-ci.org/Lionex/camber)
 
-> **Camber**: _v._ to curve 
+> **Camber**: _v._ to curve
 
 Camber is a curve interpolation library.
 
@@ -26,3 +26,12 @@ If I'm successful and figure out an interesting or particularly useful interface
 
 Lengyel, Eric; _Mathematics for 3D Game Programming and Computer Graphics_
 
+## Contributing
+
+Please set up the `pre-commit` hook using
+
+```
+$ ln -s .pre-commit.sh .git/hooks/pre-commit
+```
+
+to run tests on every commit before comitting.
