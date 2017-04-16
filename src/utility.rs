@@ -60,16 +60,16 @@ mod poly_eval {
     // Test poly_eval's ability to compute p(x) = x^3 defined by coefficients
     fn simple_cubic() {
         let qubic = vec![1.,0.,0.,0.];
-        for n in -10..10 {
-            let m = poly_eval(&qubic, n.into());
-            assert!((m - (n as f64).powi(3)).abs() < 1e-10,"{}^3 != {}",n,m);
+        for t in linspace(-10.,10.,100) {
+            let x = poly_eval(&qubic, t.into());
+            assert!((x - (t).powi(3)).abs() < 1e-10,"{}^3 != {}",t,x);
         }
     }
 
     #[test]
     // Running with an empty vector represents the constant 0, so we expect 0
     fn empty_coefficient_vector() {
-        let poly = vec![0.;0];
+        let poly = Vec::new();
         assert_eq!(poly_eval(&poly, 1.),0.,"Empty vec evaluation is nonzero");
     }
 
