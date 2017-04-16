@@ -60,9 +60,9 @@ mod poly_eval {
     // Test poly_eval's ability to compute p(x) = x^3 defined by coefficients
     fn simple_cubic() {
         let qubic = [1.,0.,0.,0.];
-        for n in -10..10 {
-            let m = poly_eval(&qubic, n.into());
-            assert!((m - f64::from(n).powi(3)).abs() < 1e-10,"{}^3 != {}",n,m);
+        for t in linspace(-10.,10.,100) {
+            let x = poly_eval(&qubic, t.into());
+            assert!((x - (t).powi(3)).abs() < 1e-10,"{}^3 != {}",t,x);
         }
     }
 
