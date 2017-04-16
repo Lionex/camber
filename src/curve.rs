@@ -30,8 +30,7 @@
 /// polynomials often serve as belnding functions for a curve that interpolates
 /// _n+1_ points with a polynomial of degree _n_.
 ///
-/// - `n`: the degree of the berinstein polynomial, must be less than 13 to
-///   prevent overflow.
+/// - `n`: the degree of the berinstein polynomial
 /// - `k`: identifies a particular bernstein polynomial where _0 <= k <= n_
 /// - `t`: the specific point at which to evaluate the polynomial.
 ///
@@ -52,10 +51,17 @@ pub fn bernstein(n: u32, k: u32,t: f64) -> f64 {
     (choose(n,k) as f64) * t.powi(k as i32) * (1.-t).powi((n - k) as i32)
 }
 
-fn factorial(n: u32) -> u32 { (1..n+1).fold(1, |f, n| f*n) }
-
+// Calculate binomial coefficients recursively in O(n) time with support for
+// large n
 fn choose(n: u32, k: u32) -> u32 {
-    factorial(n) / (factorial(n-k)*factorial(k))
+    assert!(n >= k);
+    if k == 0 {
+        1
+    } else if k > n / 2 {
+        choose(n,n-k)
+    } else {
+        n * choose(n-1,k-1) / k
+    }
 }
 
 #[cfg(test)]
@@ -84,9 +90,8 @@ mod bernstein {
     }
 
     #[test]
-    #[should_panic]
     fn large_n() {
-        let n = 13;
+        let n = u32::max_value();
         assert!(bernstein(n,n,1.) == 1.);
     }
 }
