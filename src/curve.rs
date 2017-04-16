@@ -47,14 +47,14 @@
 /// # Examples
 ///
 /// [1]: http://idav.ucdavis.edu/education/CAGDNotes/Bernstein-Polynomials.pdf
-pub fn bernstein(n: i32, k: i32,t: f64) -> f64 {
-    assert!(0 <= k && k <= n);
-    f64::from(choose(n,k)) * t.powi(k) * (1.-t).powi(n - k)
+pub fn bernstein(n: u32, k: u32,t: f64) -> f64 {
+    assert!(k <= n);
+    (choose(n,k) as f64) * t.powi(k as i32) * (1.-t).powi((n - k) as i32)
 }
 
-fn factorial(n: i32) -> i32 { (1..n+1).fold(1, |f, n| f*n) }
+fn factorial(n: u32) -> u32 { (1..n+1).fold(1, |f, n| f*n) }
 
-fn choose(n: i32, k: i32) -> i32 {
+fn choose(n: u32, k: u32) -> u32 {
     factorial(n) / (factorial(n-k)*factorial(k))
 }
 
@@ -78,7 +78,7 @@ mod bernstein {
             for t in linspace(0.,1.,100) {
                 // Sum all of the berinstein polynomials of degree n together
                 let unit = (0..n+1).map(|k|bernstein(n,k,t)).fold(0.,|s,v|s+v);
-                assert!((unit - 1.).abs() < 1e-3, "Expected 1 got {}", unit);
+                assert!((unit - 1.).abs() < 1e-3, "Expected 1 got {} with n of {} for t of {}", unit, n, t);
             }
         }
     }
