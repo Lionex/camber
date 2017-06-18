@@ -14,7 +14,7 @@ if [ $BRANCH_NAME != '(no branch)' ]
 then
     stash=0
     # Check to make sure commit isn't emtpy, exit with status 1 if it is
-    if git diff-index --quiet HEAD --; then
+    if git diff-index --cached --quiet HEAD --; then
         echo "${RED}You've tried to commit an empty commit${NC}"
         echo "\tMake sure to add your changes with 'git add'"
         exit 1
@@ -31,9 +31,7 @@ then
     cargo doc --no-deps &&
     cargo build &&
     # Build and test without profiler
-    cargo test --all &&
-    # Build and test with profiler
-    cargo test --all --features profiler
+    cargo test --all
 
     # Capture exit code from tests
     status=$?
