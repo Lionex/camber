@@ -84,7 +84,10 @@ mod bernstein {
             for t in linspace(0.,1.,100) {
                 // Sum all of the berinstein polynomials of degree n together
                 let unit = (0..n+1).map(|k|bernstein(n,k,t)).fold(0.,|s,v|s+v);
-                assert!((unit - 1.).abs() < 1e-3, "Expected 1 got {} with n of {} for t of {}", unit, n, t);
+                rel_err_test! {
+                    unit == 1. ~ 1e-12,
+                    "Expected 1, got {} with n of {} for t of {}", unit, n, t
+                }
             }
         }
     }

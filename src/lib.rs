@@ -19,6 +19,34 @@
 //! - Non-Uniform B Splines
 //! - Non-Uniform Rational B Splines
 
+/// Absolute error assert for floating-point valued functions
+#[cfg(test)]
+macro_rules! abs_err_test {
+    ($test:tt == $base:tt ~ $range:tt, $($tail:tt)*) => {
+        assert!(($test - $base).abs() < $range, $($tail)*);
+    };
+    ($test:tt == [$lower:expr,$upper:expr], $($tail:tt)*) => {
+        assert!($test <= $upper && $test >= $lower, $($tail)*);
+    };
+    ($test:tt == ($lower:expr,$upper:expr), $($tail:tt)*) => {
+        assert!($test < $upper && $test > $lower, $($tail)*);
+    };
+}
+
+/// Relative error assert for floating-point valued functions
+#[cfg(test)]
+macro_rules! rel_err_test {
+    ($test:tt == $base:tt ~ $range:tt, $($tail:tt)*) => {
+        assert!(($test - $base).abs()/$base < $range, $($tail)*);
+    };
+    ($test:tt == [$lower:expr,$upper:expr], $($tail:tt)*) => {
+        assert!($test/$base <= $upper && $test/$base >= $lower, $($tail)*);
+    };
+    ($test:tt == ($lower:expr,$upper:expr), $($tail:tt)*) => {
+        assert!($test/$base < $upper && $test/$base > $lower, $($tail)*);
+    };
+}
+
 pub mod curve;
 mod utility;
 
