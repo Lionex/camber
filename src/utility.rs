@@ -47,7 +47,7 @@
 /// (0..100).map(|x| poly_eval(&poly, f64::from(x)*0.1));
 /// ```
 ///
-pub fn poly_eval(coefficients: &Vec<f64>, x: f64) -> f64 {
+pub fn poly_eval(coefficients: &[f64], x: f64) -> f64 {
     // From the form: p(x) = (((a_n*x + a_n-1)*x + ... + a_2)*x + a_1)*x + a_0
     coefficients.iter().fold(0., |b,c| (x*b) + c)
 }
@@ -111,7 +111,7 @@ mod poly_eval {
 /// # use camber::{linspace, poly_eval};
 /// let xs = linspace(0.,1.,100);
 /// let ys: Vec<f64> = xs.iter()
-///     .map(|t| poly_eval(&vec![1.,0.,0.],*t)) // f(x) = x^2
+///     .map(|t| poly_eval(&[1.,0.,0.],*t)) // f(x) = x^2
 ///     .collect();
 /// ```
 /// or with a for loop:

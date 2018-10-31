@@ -40,10 +40,10 @@ macro_rules! rel_err_test {
         assert!(($test - $base).abs()/$base < $range, $($tail)*);
     };
     ($test:tt == [$lower:expr,$upper:expr], $($tail:tt)*) => {
-        assert!($test/$base <= $upper && $test/$base >= $lower, $($tail)*);
+        assert!($test/$upper <= $upper && $test/$lower >= $lower, $($tail)*);
     };
     ($test:tt == ($lower:expr,$upper:expr), $($tail:tt)*) => {
-        assert!($test/$base < $upper && $test/$base > $lower, $($tail)*);
+        assert!($test/$upper < $upper && $test/$lower > $lower, $($tail)*);
     };
 }
 
