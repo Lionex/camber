@@ -122,13 +122,13 @@ mod poly_eval {
 /// };
 /// ```
 pub fn linspace(start: f64, end: f64, numel: u32) -> Vec<f64> {
-    let n = f64::from(numel);
+    let n = numel as f64;
     // Given some desired start _s_ and end _e_, parameterize
     // _f(t) = s*(1-t) + e*(t)_ so _f(0) = s_ and _f(1) = e_,  then map over the
     // desired number of elements, and divide t by the number of elements to
     // retain the start and end bounds.
-    (1..numel+1)
-        .map(|t| (start*(1.-f64::from(t)/n) + end*f64::from(t)/n))
+    (1..=numel)
+        .map(|t| (start*(1.-f64::from(t)/n) + end*t as f64/n))
         .collect()
 }
 
@@ -152,7 +152,7 @@ mod linspace {
     fn respects_boundaries() {
         let (start,end) = (0.,1.);
         for el in linspace(start,end,1000000) {
-            assert!(f64::from(start) <= el && el <= f64::from(end));
+            assert!(start as f64 <= el && el <= end as f64);
         }
     }
 
