@@ -1,5 +1,7 @@
 //! Utility functions to use in conjunction with the curve interpolation tools.
 
+use std::iter::Iterator;
+
 /// Evaluate a polynomial from its coefficients
 ///
 /// A polynomial of degree _n_ has _n_+1 coefficients.  Providing a single
@@ -171,5 +173,160 @@ mod linspace {
     #[test]
     fn correct_length() {
         assert_eq!(linspace(0.,1.,1000000).len(), 1000000);
+    }
+}
+
+/// An inclusive range iterater with the desired number of elements
+///
+/// `Linspace` can handle ranges in any direction, and even constant ranges. Linspace is guaranteed
+/// to stay within the start and end bounds.  It's useful for providing linear ranges over which to
+/// evaluate 1D transforms or polynomials.
+///
+/// # Examples
+///
+/// A range with zero elements simply `None` forever.
+///
+/// ```
+/// use camber::utility::Linspace;
+///
+/// let mut empty = Linspace::new(1., -1., 0);
+/// assert_eq!(empty.next(), None);
+/// assert_eq!(empty.next(), None);
+/// ```
+///
+/// It's also possible to create a range of `t` values from which to evaluate a 1D polynomial.
+///
+/// ```
+/// # use camber::utility::Linspace;
+/// use camber::utility::poly_eval;
+///
+/// let mut ts = Linspace::new(-1., 1., 50);
+/// let coeffients = [1., 5., 32., 1.];
+/// let ys: Vec<f64> = ts.map(|t| poly_eval(&coeffients, t)).collect();
+/// ```
+///
+/// This is better than using the `linspace` function as it does not allocate a vector which could
+/// be wastefull
+#[derive(Debug, Clone, Copy)]
+pub struct Linspace {
+    start: f64,
+    end: f64,
+    numel: usize,
+    t: usize,
+}
+
+impl Linspace {
+    /// Create inclusive range iterator over `numel` elements between `start` and `end`
+    ///
+    /// The _total_ number of elements generated is `numel` including the `start` and `end`. For
+    /// example with 100 elements:
+    ///
+    /// ```
+    /// # use camber::utility::Linspace;
+    /// let mut lin = Linspace::new(0., 1., 100);
+    /// assert_eq!(lin.count(), 100);
+    /// ```
+    pub fn new(start: f64, end: f64, numel: usize) -> Self {
+        Linspace {
+            start,
+            end,
+            numel,
+            t: 0,
+        }
+    }
+
+
+    /// Create inclusive range iterater with a stepsize approximately equal to `step`
+    pub fn with_stepsize(start: f64, end: f64, step: f64) -> Self {
+        let numel = ((end-start) / step) as usize;
+        Linspace {
+            start,
+            end,
+            numel,
+            t: 0,
+        }
+    }
+
+    /// Set a new number of elements from the `current` element to the end
+    ///
+    /// This _will_ change the size of each step moving forward
+    pub fn numel(&mut self, numel: usize) -> &Self {
+        self.numel = self.t + numel;
+        self
+    }
+
+    /// Start over again from the original `start` value
+    ///
+    /// ```
+    /// # use camber::utility::Linspace;
+    /// let mut lin = Linspace::new(0., 1., 2);
+    ///
+    /// // Consume all of the elements
+    /// assert_eq!(lin.next(), Some(0.));
+    /// assert_eq!(lin.next(), Some(1.));
+    /// assert!(lin.next().is_none());
+    ///
+    /// lin.restart();
+    /// assert_eq!(lin.next(), Some(0.));
+    /// ```
+    pub fn restart(&mut self) -> &Self {
+        self.t = 0;
+        self
+    }
+}
+
+impl Iterator for Linspace {
+    type Item = f64;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.numel == self.t {
+            None
+        } else {
+            let t = self.t as f64 / (self.numel - 1) as f64;
+            self.t += 1;
+            Some(lerp(self.start, self.end, t))
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining = self.numel - self.t;
+        (remaining, Some(self.numel))
+    }
+
+    fn last(self) -> Option<Self::Item> {
+        let t = self.t as f64 / ((self.numel-1) as f64);
+        Some(lerp(self.start, self.end, t))
+    }
+}
+
+#[cfg(test)]
+mod linspace_iterator {
+    use super::Linspace;
+
+    #[test]
+    fn zero_elements() {
+        let linspace = Linspace::new(0., 0., 0);
+
+        assert_eq!(linspace.count(), 0);
+    }
+
+    #[test]
+    fn constant_range() {
+        for el in Linspace::new(1.,1.,1000000) {
+            assert_eq!(el,1.);
+        }
+    }
+
+    #[test]
+    fn respects_boundaries() {
+        let (start, end) = (0., 1.);
+        for el in Linspace::new(start,end,1000000) {
+            assert!(start as f64 <= el && el <= end as f64);
+        }
+    }
+
+    #[test]
+    fn correct_length() {
+        assert_eq!(Linspace::new(0.,1.,1000000).count(), 1000000);
     }
 }
