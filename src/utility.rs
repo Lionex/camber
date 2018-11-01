@@ -273,6 +273,11 @@ impl Linspace {
         self.t = 0;
         self
     }
+
+    #[inline(always)]
+    fn t_n(t: usize, numel: usize) -> f64 {
+        t as f64 / (numel - 1) as f64
+    }
 }
 
 impl Iterator for Linspace {
@@ -282,7 +287,7 @@ impl Iterator for Linspace {
         if self.numel == self.t {
             None
         } else {
-            let t = self.t as f64 / (self.numel - 1) as f64;
+            let t = Self::t_n(self.t, self.numel);
             self.t += 1;
             Some(lerp(self.start, self.end, t))
         }
@@ -294,7 +299,7 @@ impl Iterator for Linspace {
     }
 
     fn last(self) -> Option<Self::Item> {
-        let t = self.t as f64 / ((self.numel-1) as f64);
+        let t = Self::t_n(self.numel - 1, self.numel);
         Some(lerp(self.start, self.end, t))
     }
 }
