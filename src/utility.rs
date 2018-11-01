@@ -81,12 +81,18 @@ mod poly_eval {
     }
 }
 
+#[inline(always)]
+fn lerp(a: f64, b: f64, t: f64) -> f64 {
+    a*(1.-t) + b*t
+}
+
 /// Create an inclusive range of with the desired number of elements
 ///
 /// Linspace can handle ranges in any direction, and even constant ranges like
-/// `linspace(1.,1.,100);`  Linspace is also guaranteed to stay within the start
-/// and end bounds.  It's useful for providing ranges over which to evaluate
-/// polynomials.  A range with zero elements simply returns an empty vector.
+/// `linspace(1.,1.,100);`  Linspace is also guaranteed to stay within the start and end bounds.
+/// It's useful for providing linear ranges over which to evaluate 1D transforms or polynomials.
+///
+/// A range with zero elements simply returns an empty vector.
 ///
 /// _O(n)_ time complexity.
 ///
@@ -127,8 +133,13 @@ pub fn linspace(start: f64, end: f64, numel: u32) -> Vec<f64> {
     // _f(t) = s*(1-t) + e*(t)_ so _f(0) = s_ and _f(1) = e_,  then map over the
     // desired number of elements, and divide t by the number of elements to
     // retain the start and end bounds.
-    (1..=numel)
-        .map(|t| (start*(1.-f64::from(t)/n) + end*t as f64/n))
+    if numel == 0 { return Vec::new(); }
+    let n = (numel - 1) as f64;
+    (0..numel)
+        .map(|t| {
+            let t = t as f64 / n;
+            lerp(start, end, t)
+        })
         .collect()
 }
 
