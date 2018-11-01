@@ -3,6 +3,4 @@
 //! `Camber` is a library of fast, composeable, non-linear, 1D transformation functions also known
 //! as _easing functions_ or _normalized utility functions_.
 
-mod utility;
-
-pub use utility::{poly_eval, linspace};
+pub mod utility;

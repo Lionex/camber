@@ -15,7 +15,7 @@
 /// of its coefficients.
 ///
 /// ```
-/// # use camber::poly_eval;
+/// # use camber::utility::poly_eval;
 /// let poly = vec![1.,6.,3.];
 /// #
 /// # assert!(poly_eval(&poly, 0.) == 3.);
@@ -27,7 +27,7 @@
 /// these in mind we have:
 ///
 /// ```
-/// # use camber::poly_eval;
+/// # use camber::utility::poly_eval;
 /// # let poly = vec![1.,6.,3.];
 /// #
 /// assert!(poly_eval(&poly, 0.) == 3.);
@@ -41,7 +41,7 @@
 /// _0.1_.
 ///
 /// ```
-/// # use camber::poly_eval;
+/// # use camber::utility::poly_eval;
 /// # let poly = vec![1.,6.,3.];
 /// #
 /// (0..100).map(|x| poly_eval(&poly, f64::from(x)*0.1));
@@ -106,7 +106,7 @@ fn lerp(a: f64, b: f64, t: f64) -> f64 {
 /// one, we can do:
 ///
 /// ```
-/// # use camber::linspace;
+/// # use camber::utility::linspace;
 /// linspace(0.,1.,100);
 /// ```
 ///
@@ -114,18 +114,13 @@ fn lerp(a: f64, b: f64, t: f64) -> f64 {
 /// range of x values
 ///
 /// ```
-/// # use camber::{linspace, poly_eval};
+/// # use camber::utility::{linspace, poly_eval};
 /// let xs = linspace(0.,1.,100);
+/// // x^3
+/// let poly = [1.,0.,0.];
 /// let ys: Vec<f64> = xs.iter()
-///     .map(|t| poly_eval(&vec![1.,0.,0.],*t)) // f(x) = x^2
+///     .map(|t| poly_eval(&poly,*t)) // f(x) = x^2
 ///     .collect();
-/// ```
-/// or with a for loop:
-/// ```
-/// # use camber::{linspace, poly_eval};
-/// let ys = for t in linspace(0.,1.,100) {
-///     poly_eval(&vec![1.,0.,0.], t); // f(x) = x^2
-/// };
 /// ```
 pub fn linspace(start: f64, end: f64, numel: u32) -> Vec<f64> {
     let n = numel as f64;
