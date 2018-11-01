@@ -123,12 +123,11 @@ fn lerp(a: f64, b: f64, t: f64) -> f64 {
 ///     .collect();
 /// ```
 pub fn linspace(start: f64, end: f64, numel: u32) -> Vec<f64> {
-    let n = numel as f64;
+    if numel == 0 { return Vec::new(); }
     // Given some desired start _s_ and end _e_, parameterize
     // _f(t) = s*(1-t) + e*(t)_ so _f(0) = s_ and _f(1) = e_,  then map over the
     // desired number of elements, and divide t by the number of elements to
     // retain the start and end bounds.
-    if numel == 0 { return Vec::new(); }
     let n = (numel - 1) as f64;
     (0..numel)
         .map(|t| {
@@ -145,6 +144,13 @@ mod linspace {
     #[test]
     fn zero_elements() {
         assert_eq!(linspace(0.,0.,0).len(), 0);
+    }
+
+    #[test]
+    fn first_is_start_last_is_end() {
+        let xs = linspace(-2., 2., 2);
+        assert_eq!(xs[0], -2.);
+        assert_eq!(xs[1], 2.);
     }
 
     #[test]
