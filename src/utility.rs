@@ -316,6 +316,22 @@ mod linspace_iterator {
     }
 
     #[test]
+    fn correct_last_element() {
+        let linspace = Linspace::new(0., -10., 5);
+
+        assert_eq!(linspace.last(), Some(-10.));
+    }
+
+    #[test]
+    fn correct_end_element() {
+        let mut tf = 0.;
+        for t in Linspace::new(0., -10., 5) {
+            tf = t;
+        }
+        assert_eq!(tf, -10.);
+    }
+
+    #[test]
     fn constant_range() {
         for el in Linspace::new(1.,1.,1000000) {
             assert_eq!(el,1.);
