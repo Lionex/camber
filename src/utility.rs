@@ -336,7 +336,8 @@ mod linspace_iterator {
         fn one_element((start, end) in arb_bounds()) {
             let linspace = Linspace::new(start, end, 1);
 
-            for el in linspace {
+            for (i, el) in linspace.enumerate() {
+                assert!(i < 2, "{:?}", linspace);
                 assert!(end.approx_eq(&el, 2.*EPSILON, 2))
             }
         }
@@ -349,13 +350,24 @@ mod linspace_iterator {
         }
 
         #[test]
+        fn correct_first_element((start, end) in arb_bounds(), n in arb_length()) {
+            let mut linspace = Linspace::new(start, end, n);
+            let first = linspace.next().expect("Last element must exist");
+            assert!(first.approx_eq(&start, 3.*EPSILON, 3))
+        }
+
+        #[test]
         fn correct_end_element((start, end) in arb_bounds(), n in arb_length()) {
             let range = Linspace::new(start, end, n);
             let mut tf = 0.;
-            for t in range {
+            for (i, t) in range.enumerate() {
+                assert!(i <= n, "t_{} of {}: {:e}", i, n, t);
                 tf = t;
             }
-            assert_eq!(tf, end);
+            assert!(
+                tf.approx_eq(&end, 3.*EPSILON, 3),
+                "tf: {:e} != {:e}", tf, end
+            );
         }
 
         #[test]
