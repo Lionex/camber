@@ -226,12 +226,17 @@ impl Linspace {
     /// let mut lin = Linspace::new(0., 1., 100);
     /// assert_eq!(lin.count(), 100);
     /// ```
-    pub fn new(start: f64, end: f64, numel: usize) -> Self {
+    pub fn new(start: f64, end: f64, mut numel: usize) -> Self {
+        let mut t = 0;
+        if numel == 1 {
+            t = 1;
+            numel = 2;
+        }
         Linspace {
             start,
             end,
             numel,
-            t: 0,
+            t,
         }
     }
 
@@ -306,48 +311,81 @@ impl Iterator for Linspace {
 
 #[cfg(test)]
 mod linspace_iterator {
+    use float_cmp::ApproxEq;
+    use proptest::prelude::*;
+    use std::f64::EPSILON;
     use super::Linspace;
 
-    #[test]
-    fn zero_elements() {
-        let linspace = Linspace::new(0., 0., 0);
-
-        assert_eq!(linspace.count(), 0);
+    fn arb_bounds() -> impl Strategy<Value = (f64, f64)> {
+        (any::<f64>(), any::<f64>())
     }
 
-    #[test]
-    fn correct_last_element() {
-        let linspace = Linspace::new(0., -10., 5);
-
-        assert_eq!(linspace.last(), Some(-10.));
+    fn arb_length() -> impl Strategy<Value = usize> {
+        1..100_000usize
     }
 
-    #[test]
-    fn correct_end_element() {
-        let mut tf = 0.;
-        for t in Linspace::new(0., -10., 5) {
-            tf = t;
+    proptest! {
+        #[test]
+        fn zero_elements((start, end) in arb_bounds()) {
+            let linspace = Linspace::new(start, end, 0);
+
+            assert_eq!(linspace.count(), 0);
         }
-        assert_eq!(tf, -10.);
-    }
 
-    #[test]
-    fn constant_range() {
-        for el in Linspace::new(1.,1.,1000000) {
-            assert_eq!(el,1.);
+        #[test]
+        fn one_element((start, end) in arb_bounds()) {
+            let linspace = Linspace::new(start, end, 1);
+
+            for el in linspace {
+                assert!(end.approx_eq(&el, 2.*EPSILON, 2))
+            }
         }
-    }
 
-    #[test]
-    fn respects_boundaries() {
-        let (start, end) = (0., 1.);
-        for el in Linspace::new(start,end,1000000) {
-            assert!(start as f64 <= el && el <= end as f64);
+        #[test]
+        fn correct_last_element((start, end) in arb_bounds(), n in arb_length()) {
+            let linspace = Linspace::new(start, end, n);
+            let last = linspace.last().expect("Last element must exist");
+            assert!(last.approx_eq(&end, 3.*EPSILON, 3))
         }
-    }
 
-    #[test]
-    fn correct_length() {
-        assert_eq!(Linspace::new(0.,1.,1000000).count(), 1000000);
+        #[test]
+        fn correct_end_element((start, end) in arb_bounds(), n in arb_length()) {
+            let range = Linspace::new(start, end, n);
+            let mut tf = 0.;
+            for t in range {
+                tf = t;
+            }
+            assert_eq!(tf, end);
+        }
+
+        #[test]
+        fn constant_range(constant in any::<f64>(), numel in arb_length()) {
+            for el in Linspace::new(constant,constant,numel) {
+                assert!(el.approx_eq(&constant, 3.*EPSILON, 3), "\tel {:e} == {:e}", el, constant);
+            }
+        }
+
+        #[test]
+        fn respects_boundaries((start, end) in arb_bounds(), n in arb_length()) {
+            let min = start.min(end);
+            let max = start.max(end);
+            let linspace = Linspace::new(start, end, n);
+            for el in linspace {
+                assert! {
+                    (min < el && el < max) ||
+                        (el.approx_eq(&min, 3.*EPSILON, 3) || el.approx_eq(&max, 3.*EPSILON, 3)),
+                    "el {:e} outside range [{:e}, {:e}]",
+                    el,
+                    min,
+                    max
+                };
+            }
+        }
+
+        #[test]
+        fn correct_length((start, end) in arb_bounds(), n in arb_length()) {
+            let linspace = Linspace::new(start, end, n);
+            assert_eq!(linspace.count(), n);
+        }
     }
 }

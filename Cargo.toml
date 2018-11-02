@@ -11,3 +11,6 @@ keywords = ["curve", "interpolation"]
 
 [dependencies]
 
+[dev-dependencies]
+proptest = "^0.8.7"
+float-cmp = "^0.4.0"
