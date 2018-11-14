@@ -83,6 +83,153 @@ mod poly_eval {
     }
 }
 
+/// Step across the inclusive range from `0` to `1` with a set number of steps or stepsize
+///
+/// No matter what stepsize is chosen, the stepper will always run through at least one iteration
+/// starting at exactly zero.
+///
+/// ```
+/// # use camber::utility::Stepper;
+/// assert_eq!(Some(0.), Stepper::new(1e1000).next());
+/// assert_eq!(Some(0.), Stepper::new(1e-16).next());
+/// ```
+pub struct Stepper {
+    t: f64,
+    dt: f64,
+}
+
+impl Stepper {
+    /// Create a stepper which steps from 0 to 1 with the given stepsize
+    ///
+    /// # Examples
+    ///
+    /// The stepper will run until it's value is greater than 1, where it will simply truncate.
+    ///
+    /// ```
+    /// # use camber::utility::Stepper;
+    /// let mut step = Stepper::new(0.75);
+    /// assert_eq!(Some(0.0), step.next());
+    /// assert_eq!(Some(0.75), step.next());
+    /// assert_eq!(None, step.next());
+    /// ```
+    ///
+    /// If the given stepsize is larger than 1, will yield 0 as the first element and then
+    /// terminate.
+    ///
+    /// ```
+    /// # use camber::utility::Stepper;
+    /// let mut zero = Stepper::new(1.5);
+    /// assert_eq!(Some(0.0), zero.next());
+    /// assert_eq!(None, zero.next());
+    /// ```
+    pub fn new(dt: f64) -> Self {
+        Stepper {
+            t: 0., dt,
+        }
+    }
+
+    /// Create a stepper which steps from 0 to 1 inclusive with approximately `n` steps
+    ///
+    /// # Examples
+    ///
+    /// The stepper will tend to under-estimate the correct number of steps and stop right before
+    /// getting to `1.0` due to limits of numerical percision.  Usually, the total is one less than
+    /// the provided number of elements.
+    ///
+    /// ```
+    /// # use camber::utility::Stepper;
+    /// # let n = 100;
+    /// let total = Stepper::with_numel(n).count();
+    /// assert!(total as f64 / n as f64 > 0.99);
+    /// ```
+    ///
+    /// If the exact number of elements is important, use [`Linspace`] instead.
+    ///
+    /// When asked to provide only one step, the stepper will return 0 once.
+    ///
+    /// ```
+    /// # use camber::utility::Stepper;
+    /// let mut zero = Stepper::with_numel(1);
+    /// assert_eq!(Some(0.0), zero.next());
+    /// assert_eq!(None, zero.next());
+    /// ```
+    ///
+    /// A number of elements of zero will return `None` forever.
+    ///
+    /// ```
+    /// # use camber::utility::Stepper;
+    /// let mut none = Stepper::with_numel(0);
+    /// assert_eq!(None, none.next());
+    /// assert_eq!(None, none.next());
+    /// assert_eq!(None, none.next());
+    /// assert_eq!(None, none.next());
+    /// ```
+    ///
+    /// [`Linspace`]: struct.Linspace.html
+    pub fn with_numel(n: usize) -> Self {
+        let dt = if n > 1 {
+            1. / (n-1) as f64
+        } else {
+            2.
+        };
+
+        Stepper {
+            t: if n == 0 {2.} else {0.},
+            dt,
+        }
+    }
+}
+
+impl Iterator for Stepper {
+    type Item = f64;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.t > 1. {
+            None
+        } else {
+            let t = self.t;
+            self.t += self.dt;
+            Some(t)
+        }
+    }
+}
+
+#[cfg(test)]
+mod stepper {
+    use float_cmp::ApproxEq;
+    use proptest::prelude::*;
+    use std::f64::EPSILON;
+    use super::Stepper;
+
+    fn arb_length() -> impl Strategy<Value = usize> {
+        1..1_000_000usize
+    }
+
+    fn is_bounds(el: f64, min: f64, max: f64) -> bool {
+        el.approx_eq(&min, 3.*EPSILON, 3) || el.approx_eq(&max, 3.*EPSILON, 3)
+    }
+
+    proptest! {
+
+        #[test]
+        fn respects_boundaries(n in arb_length()) {
+            let stepper = Stepper::with_numel(n);
+            for el in stepper {
+                let in_bounds = (0. < el && el < 1.) || is_bounds(el, 0., 1.);
+                assert!(in_bounds, "{:e} outside range [0, 1]", el);
+            }
+        }
+
+        #[test]
+        fn approx_right_numel(n in 1..100_000usize) {
+            let total = Stepper::with_numel(n).count();
+            let proportion = total as f64 / n as f64;
+            let pass = proportion > 0.99;
+            assert!(pass, "total {} doesn't approximate set number of elements {}", total, n);
+        }
+    }
+}
+
 #[inline(always)]
 fn lerp(a: f64, b: f64, t: f64) -> f64 {
     a*(1.-t) + b*t
