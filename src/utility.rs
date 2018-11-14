@@ -4,8 +4,9 @@ use std::iter::Iterator;
 
 /// Evaluate a polynomial from its coefficients
 ///
-/// A polynomial of degree _n_ has _n_+1 coefficients.  Providing a single
-/// coefficient is the same as a constant function.
+/// A polynomial of degree _n_ has _n_+1 coefficients.  Providing a single coefficient is the same
+/// as a constant function.
+///
 /// Achieves O(n) time complexity given n coefficients using _Horner's Rule_.
 ///
 /// - `coefficients`: vector of coeffients in the order `a[n] .. a[0]`
