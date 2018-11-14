@@ -480,6 +480,10 @@ mod linspace_iterator {
     use std::f64::EPSILON;
     use super::Linspace;
 
+    fn is_bounds(el: f64, min: f64, max: f64) -> bool {
+        el.approx_eq(&min, 3.*EPSILON, 3) || el.approx_eq(&max, 3.*EPSILON, 3)
+    }
+
     fn arb_bounds() -> impl Strategy<Value = (f64, f64)> {
         (any::<f64>(), any::<f64>())
     }
@@ -548,8 +552,7 @@ mod linspace_iterator {
             let linspace = Linspace::new(start, end, n);
             for el in linspace {
                 assert! {
-                    (min < el && el < max) ||
-                        (el.approx_eq(&min, 3.*EPSILON, 3) || el.approx_eq(&max, 3.*EPSILON, 3)),
+                    (min < el && el < max) || is_bounds(el, min, max),
                     "el {:e} outside range [{:e}, {:e}]",
                     el,
                     min,
