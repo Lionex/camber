@@ -394,6 +394,16 @@ impl Linspace {
         }
     }
 
+    /// Inclusive range iterator over the range 0 to 1 with the desired number of elements
+    ///
+    /// If numerical precision and the exact number of elements is less important than speed, try
+    /// [`Stepper`] instead.
+    ///
+    /// [`Stepper`]: struct.Stepper.html
+    pub fn normal(numel: usize) -> Self {
+        Self::new(0., 1., numel)
+    }
+
 
     /// Create inclusive range iterater with a stepsize approximately equal to `step`
     pub fn with_stepsize(start: f64, end: f64, step: f64) -> Self {
