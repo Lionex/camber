@@ -1,4 +1,5 @@
-//! Utility functions to use in conjunction with the curve interpolation tools.
+//! Utility functions to use alongside and drive non-linear transforms
+
 
 use std::iter::Iterator;
 
@@ -14,8 +15,7 @@ use std::iter::Iterator;
 ///
 /// # Examples
 ///
-/// Starting with a simple polynomial _p(x) = x^2 + 6x + 3_, we make a vector
-/// of its coefficients.
+/// Starting with a simple polynomial _p(x) = x^2 + 6x + 3_, we make a vector of its coefficients.
 ///
 /// ```
 /// # use camber::utility::poly_eval;
@@ -25,9 +25,8 @@ use std::iter::Iterator;
 /// # assert!(poly_eval(&poly, 1.) == 10.);
 /// ```
 ///
-/// The easiest two points solve for by hand are usually _1_ and _0_; for our
-/// particular polynomial, _p(0) = 3_ and _p(1) = 10_.  Running `poly_eval` with
-/// these in mind we have:
+/// The easiest two points solve for by hand are usually _1_ and _0_; for our particular
+/// polynomial, _p(0) = 3_ and _p(1) = 10_.  Running `poly_eval` with these in mind we have:
 ///
 /// ```
 /// # use camber::utility::poly_eval;
@@ -37,17 +36,17 @@ use std::iter::Iterator;
 /// assert!(poly_eval(&poly, 1.) == 10.);
 /// ```
 ///
-/// `poly_eval` is especially useful in cases where you have interpolated a
-/// polynomial with some method and have obtained a list of coefficients and
-/// want to get those values over a range.  Using the same polynomial from
-/// before we can do things like evaluate values from _0_ to _10_ with steps of
-/// _0.1_.
+/// `poly_eval` is especially useful in cases where you have interpolated a polynomial with some
+/// method and have obtained a list of coefficients and want to get those values over a range.
+/// Using the same polynomial from before we can do things like evaluate values from _0_ to _10_
+/// with 10 steps.
 ///
 /// ```
 /// # use camber::utility::poly_eval;
+/// use camber::utility::Linspace;
 /// # let poly = vec![1.,6.,3.];
 /// #
-/// (0..100).map(|x| poly_eval(&poly, f64::from(x)*0.1));
+/// Linspace::new(0., 10., 10).map(|x| poly_eval(&poly, f64::from(x)*0.1));
 /// ```
 ///
 pub fn poly_eval(coefficients: &[f64], x: f64) -> f64 {
@@ -84,7 +83,13 @@ mod poly_eval {
     }
 }
 
-/// Step across the inclusive range from `0` to `1` with a set number of steps or stepsize
+/// Iterator over the range [0, 1] with a set number of steps or stepsize
+///
+/// # See Also
+///
+/// - [`Linspace`]
+///
+/// # Examples
 ///
 /// No matter what stepsize is chosen, the stepper will always run through at least one iteration
 /// starting at exactly zero.
@@ -94,6 +99,8 @@ mod poly_eval {
 /// assert_eq!(Some(0.), Stepper::new(1e1000).next());
 /// assert_eq!(Some(0.), Stepper::new(1e-16).next());
 /// ```
+///
+/// [`Linspace`]: struct.Linspace.html
 pub struct Stepper {
     t: f64,
     dt: f64,
@@ -250,6 +257,10 @@ fn lerp(a: f64, b: f64, t: f64) -> f64 {
 /// - `end`: The last value of the range
 /// - `numel`: The number of elements in the range
 ///
+/// # See Also
+///
+/// - [`Linspace`]
+///
 /// # Examples
 ///
 /// To get 100 floating point numbers between zero and one, including zero and
@@ -272,6 +283,8 @@ fn lerp(a: f64, b: f64, t: f64) -> f64 {
 ///     .map(|t| poly_eval(&poly,*t)) // f(x) = x^2
 ///     .collect();
 /// ```
+///
+/// [`Linspace`]: struct.Linspace.html
 pub fn linspace(start: f64, end: f64, numel: u32) -> Vec<f64> {
     if numel == 0 { return Vec::new(); }
     // Given some desired start _s_ and end _e_, parameterize
@@ -337,6 +350,11 @@ mod linspace {
 /// to stay within the start and end bounds.  It's useful for providing linear ranges over which to
 /// evaluate 1D transforms or polynomials.
 ///
+/// # See Also
+///
+/// - [`Stepper`]
+/// - [`linspace`]
+///
 /// # Examples
 ///
 /// A range with zero elements simply `None` forever.
@@ -357,11 +375,11 @@ mod linspace {
 ///
 /// let mut ts = Linspace::new(-1., 1., 50);
 /// let coeffients = [1., 5., 32., 1.];
-/// let ys: Vec<f64> = ts.map(|t| poly_eval(&coeffients, t)).collect();
+/// let ts: Vec<f64> = ts.map(|t| poly_eval(&coeffients, t)).collect();
 /// ```
 ///
-/// This is better than using the `linspace` function as it does not allocate a vector which could
-/// be wastefull
+/// [`linspace`]: fn.linspace.html
+/// [`Stepper`]: struct.Stepper.html
 #[derive(Debug, Clone, Copy)]
 pub struct Linspace {
     start: f64,
