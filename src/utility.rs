@@ -303,6 +303,13 @@ mod linspace {
     }
 
     #[test]
+    fn backwards() {
+        let xs = linspace(2., -2., 2);
+        assert_eq!(xs[0], 2.);
+        assert_eq!(xs[1], -2.);
+    }
+
+    #[test]
     fn constant_range() {
         for el in linspace(1.,1.,1000000) {
             assert_eq!(el,1.);
