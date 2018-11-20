@@ -18,7 +18,7 @@ use std::iter::Iterator;
 /// Starting with a simple polynomial _p(x) = x^2 + 6x + 3_, we make a vector of its coefficients.
 ///
 /// ```
-/// # use camber::utility::poly_eval;
+/// # use camber::poly_eval;
 /// let poly = vec![1.,6.,3.];
 /// #
 /// # assert!(poly_eval(&poly, 0.) == 3.);
@@ -29,7 +29,7 @@ use std::iter::Iterator;
 /// polynomial, _p(0) = 3_ and _p(1) = 10_.  Running `poly_eval` with these in mind we have:
 ///
 /// ```
-/// # use camber::utility::poly_eval;
+/// # use camber::poly_eval;
 /// # let poly = vec![1.,6.,3.];
 /// #
 /// assert!(poly_eval(&poly, 0.) == 3.);
@@ -42,8 +42,8 @@ use std::iter::Iterator;
 /// with 10 steps.
 ///
 /// ```
-/// # use camber::utility::poly_eval;
-/// use camber::utility::Linspace;
+/// # use camber::poly_eval;
+/// use camber::Linspace;
 /// # let poly = vec![1.,6.,3.];
 /// #
 /// Linspace::new(0., 10., 10).map(|x| poly_eval(&poly, f64::from(x)*0.1));
@@ -85,9 +85,8 @@ mod poly_eval {
 
 /// Iterator over the range [0, 1] with a set number of steps or stepsize
 ///
-/// # See Also
-///
-/// - [`Linspace`]
+/// Compared to [`Linspace`], the stepper is faster but not as accurate, and tends to terminate
+/// before reaching `1` exactly due to floating point precision.
 ///
 /// # Examples
 ///
@@ -95,12 +94,33 @@ mod poly_eval {
 /// starting at exactly zero.
 ///
 /// ```
-/// # use camber::utility::Stepper;
+/// # use camber::Stepper;
 /// assert_eq!(Some(0.), Stepper::new(1e1000).next());
 /// assert_eq!(Some(0.), Stepper::new(1e-16).next());
 /// ```
 ///
+/// The stepper will run until it's value is greater than 1, where it will simply truncate.
+///
+/// ```
+/// # use camber::Stepper;
+/// let mut step = Stepper::new(0.75);
+/// assert_eq!(Some(0.0), step.next());
+/// assert_eq!(Some(0.75), step.next());
+/// assert_eq!(None, step.next());
+/// ```
+///
+/// If the given stepsize is larger than 1, will yield 0 as the first element and then
+/// terminate.
+///
+/// ```
+/// # use camber::Stepper;
+/// let mut zero = Stepper::new(1.5);
+/// assert_eq!(Some(0.0), zero.next());
+/// assert_eq!(None, zero.next());
+/// ```
+///
 /// [`Linspace`]: struct.Linspace.html
+#[derive(Debug, Copy, Clone)]
 pub struct Stepper {
     t: f64,
     dt: f64,
@@ -108,28 +128,6 @@ pub struct Stepper {
 
 impl Stepper {
     /// Create a stepper which steps from 0 to 1 with the given stepsize
-    ///
-    /// # Examples
-    ///
-    /// The stepper will run until it's value is greater than 1, where it will simply truncate.
-    ///
-    /// ```
-    /// # use camber::utility::Stepper;
-    /// let mut step = Stepper::new(0.75);
-    /// assert_eq!(Some(0.0), step.next());
-    /// assert_eq!(Some(0.75), step.next());
-    /// assert_eq!(None, step.next());
-    /// ```
-    ///
-    /// If the given stepsize is larger than 1, will yield 0 as the first element and then
-    /// terminate.
-    ///
-    /// ```
-    /// # use camber::utility::Stepper;
-    /// let mut zero = Stepper::new(1.5);
-    /// assert_eq!(Some(0.0), zero.next());
-    /// assert_eq!(None, zero.next());
-    /// ```
     pub fn new(dt: f64) -> Self {
         Stepper {
             t: 0., dt,
@@ -145,7 +143,7 @@ impl Stepper {
     /// the provided number of elements.
     ///
     /// ```
-    /// # use camber::utility::Stepper;
+    /// # use camber::Stepper;
     /// # let n = 100;
     /// let total = Stepper::with_numel(n).count();
     /// assert!(total as f64 / n as f64 > 0.99);
@@ -156,7 +154,7 @@ impl Stepper {
     /// When asked to provide only one step, the stepper will return 0 once.
     ///
     /// ```
-    /// # use camber::utility::Stepper;
+    /// # use camber::Stepper;
     /// let mut zero = Stepper::with_numel(1);
     /// assert_eq!(Some(0.0), zero.next());
     /// assert_eq!(None, zero.next());
@@ -165,7 +163,7 @@ impl Stepper {
     /// A number of elements of zero will return `None` forever.
     ///
     /// ```
-    /// # use camber::utility::Stepper;
+    /// # use camber::Stepper;
     /// let mut none = Stepper::with_numel(0);
     /// assert_eq!(None, none.next());
     /// assert_eq!(None, none.next());
@@ -267,7 +265,7 @@ fn lerp(a: f64, b: f64, t: f64) -> f64 {
 /// one, we can do:
 ///
 /// ```
-/// # use camber::utility::linspace;
+/// # use camber::linspace;
 /// linspace(0.,1.,100);
 /// ```
 ///
@@ -275,7 +273,7 @@ fn lerp(a: f64, b: f64, t: f64) -> f64 {
 /// range of x values
 ///
 /// ```
-/// # use camber::utility::{linspace, poly_eval};
+/// # use camber::{linspace, poly_eval};
 /// let xs = linspace(0.,1.,100);
 /// // x^3
 /// let poly = [1.,0.,0.];
@@ -360,7 +358,7 @@ mod linspace {
 /// A range with zero elements simply `None` forever.
 ///
 /// ```
-/// use camber::utility::Linspace;
+/// use camber::Linspace;
 ///
 /// let mut empty = Linspace::new(1., -1., 0);
 /// assert_eq!(empty.next(), None);
@@ -370,8 +368,8 @@ mod linspace {
 /// It's also possible to create a range of `t` values from which to evaluate a 1D polynomial.
 ///
 /// ```
-/// # use camber::utility::Linspace;
-/// use camber::utility::poly_eval;
+/// # use camber::Linspace;
+/// use camber::poly_eval;
 ///
 /// let mut ts = Linspace::new(-1., 1., 50);
 /// let coeffients = [1., 5., 32., 1.];
@@ -380,7 +378,7 @@ mod linspace {
 ///
 /// [`linspace`]: fn.linspace.html
 /// [`Stepper`]: struct.Stepper.html
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Copy, Clone)]
 pub struct Linspace {
     start: f64,
     end: f64,
@@ -395,7 +393,7 @@ impl Linspace {
     /// example with 100 elements:
     ///
     /// ```
-    /// # use camber::utility::Linspace;
+    /// # use camber::Linspace;
     /// let mut lin = Linspace::new(0., 1., 100);
     /// assert_eq!(lin.count(), 100);
     /// ```
@@ -446,7 +444,7 @@ impl Linspace {
     /// Start over again from the original `start` value
     ///
     /// ```
-    /// # use camber::utility::Linspace;
+    /// # use camber::Linspace;
     /// let mut lin = Linspace::new(0., 1., 2);
     ///
     /// // Consume all of the elements
