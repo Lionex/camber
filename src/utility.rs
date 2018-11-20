@@ -184,6 +184,11 @@ impl Stepper {
             dt,
         }
     }
+
+    pub fn restart(&mut self) -> &Self {
+        self.t = 0.;
+        self
+    }
 }
 
 impl Iterator for Stepper {
