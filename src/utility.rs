@@ -198,6 +198,12 @@ impl Iterator for Stepper {
             Some(t)
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let min = (1f64 - self.t) / self.dt;
+        let max = 1f64 / self.dt;
+        (min as usize + 1, Some(max as usize + 1))
+    }
 }
 
 #[cfg(test)]
@@ -215,6 +221,15 @@ mod stepper {
         el.approx_eq(&min, 3.*EPSILON, 3) || el.approx_eq(&max, 3.*EPSILON, 3)
     }
 
+    prop_compose! {
+        fn arb_hint()
+            (n in 1..100_000usize)
+            (hint in (Just(n), 0..n))
+        -> (usize, usize) {
+            hint
+        }
+    }
+
     proptest! {
 
         #[test]
@@ -227,10 +242,25 @@ mod stepper {
         }
 
         #[test]
+        fn size_hint((n, c) in arb_hint()) {
+            let mut s = Stepper::with_numel(n);
+            print!("{:?} yields {:?} => ", s, s.size_hint());
+            for _ in 0..c { s.next(); }
+            if let (min, Some(max)) = s.size_hint() {
+                let count = s.count();
+                println!("{:?}, count {}", (min, max), count);
+                assert!(min.max(count) - count.min(min) < 2);
+                assert!(max.max(n) - n.min(max) < 2);
+            } else {
+                panic!();
+            }
+        }
+
+        #[test]
         fn approx_right_numel(n in 1..100_000usize) {
             let total = Stepper::with_numel(n).count();
             let proportion = total as f64 / n as f64;
-            let pass = proportion > 0.99;
+            let pass = proportion > 0.95;
             assert!(pass, "total {} doesn't approximate set number of elements {}", total, n);
         }
     }
