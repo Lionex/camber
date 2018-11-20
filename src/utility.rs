@@ -383,6 +383,8 @@ mod linspace {
 /// to stay within the start and end bounds.  It's useful for providing linear ranges over which to
 /// evaluate 1D transforms or polynomials.
 ///
+/// In addition to [`Iterator`], `Linspace` implements [`DoubleEndedIterator`].
+///
 /// # See Also
 ///
 /// - [`Stepper`]
@@ -413,6 +415,8 @@ mod linspace {
 ///
 /// [`linspace`]: fn.linspace.html
 /// [`Stepper`]: struct.Stepper.html
+/// [`DoubleEndedIterator`]: https://doc.rust-lang.org/std/iter/trait.DoubleEndedIterator.html
+/// [`Iterator`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html
 #[derive(Debug, Copy, Clone)]
 pub struct Linspace {
     start: f64,
@@ -444,6 +448,37 @@ impl Linspace {
             numel,
             t,
         }
+    }
+
+    /// Create inclusive range iterator which starts at the end
+    ///
+    /// # Examples
+    ///
+    /// When initialized this way, no forward elements will be yielded
+    ///
+    /// ```
+    /// # use camber::Linspace;
+    /// let mut lin = Linspace::from_end(0., 1., 2);
+    /// assert_eq!(lin.next(), None);
+    /// ```
+    ///
+    /// When moving backwards with `next_back`, will behave as with `next`, only moving from the
+    /// end element to the start element.
+    ///
+    /// ```
+    /// # use camber::Linspace;
+    /// let mut lin = Linspace::from_end(0., 1., 2);
+    ///
+    /// // 2 backwards elements
+    /// assert_eq!(lin.next_back(), Some(1.));
+    /// assert_eq!(lin.next_back(), Some(0.));
+    ///
+    /// assert_eq!(lin.next_back(), None);
+    /// ```
+    pub fn from_end(start: f64, end: f64, numel: usize) -> Self {
+        let mut s = Linspace::new(start, end, numel);
+        s.t = s.numel;
+        s
     }
 
     /// Inclusive range iterator over the range 0 to 1 with the desired number of elements
@@ -522,6 +557,18 @@ impl Iterator for Linspace {
     fn last(self) -> Option<Self::Item> {
         let t = Self::t_n(self.numel - 1, self.numel);
         Some(lerp(self.start, self.end, t))
+    }
+}
+
+impl DoubleEndedIterator for Linspace {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if 0 == self.t {
+            None
+        } else {
+            self.t -= 1;
+            let t = Self::t_n(self.t, self.numel);
+            Some(lerp(self.start, self.end, t))
+        }
     }
 }
 
