@@ -9,4 +9,5 @@ extern crate proptest;
 #[cfg(test)]
 extern crate float_cmp;
 
-pub mod utility;
+mod utility;
+pub use utility::*;

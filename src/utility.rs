@@ -1,11 +1,13 @@
-//! Utility functions to use in conjunction with the curve interpolation tools.
+//! Utility functions to use alongside and drive non-linear transforms
+
 
 use std::iter::Iterator;
 
 /// Evaluate a polynomial from its coefficients
 ///
-/// A polynomial of degree _n_ has _n_+1 coefficients.  Providing a single
-/// coefficient is the same as a constant function.
+/// A polynomial of degree _n_ has _n_+1 coefficients.  Providing a single coefficient is the same
+/// as a constant function.
+///
 /// Achieves O(n) time complexity given n coefficients using _Horner's Rule_.
 ///
 /// - `coefficients`: vector of coeffients in the order `a[n] .. a[0]`
@@ -13,40 +15,38 @@ use std::iter::Iterator;
 ///
 /// # Examples
 ///
-/// Starting with a simple polynomial _p(x) = x^2 + 6x + 3_, we make a vector
-/// of its coefficients.
+/// Starting with a simple polynomial _p(x) = x^2 + 6x + 3_, we make a vector of its coefficients.
 ///
 /// ```
-/// # use camber::utility::poly_eval;
+/// # use camber::poly_eval;
 /// let poly = vec![1.,6.,3.];
 /// #
 /// # assert!(poly_eval(&poly, 0.) == 3.);
 /// # assert!(poly_eval(&poly, 1.) == 10.);
 /// ```
 ///
-/// The easiest two points solve for by hand are usually _1_ and _0_; for our
-/// particular polynomial, _p(0) = 3_ and _p(1) = 10_.  Running `poly_eval` with
-/// these in mind we have:
+/// The easiest two points solve for by hand are usually _1_ and _0_; for our particular
+/// polynomial, _p(0) = 3_ and _p(1) = 10_.  Running `poly_eval` with these in mind we have:
 ///
 /// ```
-/// # use camber::utility::poly_eval;
+/// # use camber::poly_eval;
 /// # let poly = vec![1.,6.,3.];
 /// #
 /// assert!(poly_eval(&poly, 0.) == 3.);
 /// assert!(poly_eval(&poly, 1.) == 10.);
 /// ```
 ///
-/// `poly_eval` is especially useful in cases where you have interpolated a
-/// polynomial with some method and have obtained a list of coefficients and
-/// want to get those values over a range.  Using the same polynomial from
-/// before we can do things like evaluate values from _0_ to _10_ with steps of
-/// _0.1_.
+/// `poly_eval` is especially useful in cases where you have interpolated a polynomial with some
+/// method and have obtained a list of coefficients and want to get those values over a range.
+/// Using the same polynomial from before we can do things like evaluate values from _0_ to _10_
+/// with 10 steps.
 ///
 /// ```
-/// # use camber::utility::poly_eval;
+/// # use camber::poly_eval;
+/// use camber::Linspace;
 /// # let poly = vec![1.,6.,3.];
 /// #
-/// (0..100).map(|x| poly_eval(&poly, f64::from(x)*0.1));
+/// Linspace::new(0., 10., 10).map(|x| poly_eval(&poly, f64::from(x)*0.1));
 /// ```
 ///
 pub fn poly_eval(coefficients: &[f64], x: f64) -> f64 {
@@ -83,6 +83,198 @@ mod poly_eval {
     }
 }
 
+/// Iterator over the range [0, 1] with a set number of steps or stepsize
+///
+/// Compared to [`Linspace`], the stepper is faster but not as accurate, and tends to terminate
+/// before reaching `1` exactly due to floating point precision.
+///
+/// # Examples
+///
+/// No matter what stepsize is chosen, the stepper will always run through at least one iteration
+/// starting at exactly zero.
+///
+/// ```
+/// # use camber::Stepper;
+/// assert_eq!(Some(0.), Stepper::new(1e1000).next());
+/// assert_eq!(Some(0.), Stepper::new(1e-16).next());
+/// ```
+///
+/// The stepper will run until it's value is greater than 1, where it will simply truncate.
+///
+/// ```
+/// # use camber::Stepper;
+/// let mut step = Stepper::new(0.75);
+/// assert_eq!(Some(0.0), step.next());
+/// assert_eq!(Some(0.75), step.next());
+/// assert_eq!(None, step.next());
+/// ```
+///
+/// If the given stepsize is larger than 1, will yield 0 as the first element and then
+/// terminate.
+///
+/// ```
+/// # use camber::Stepper;
+/// let mut zero = Stepper::new(1.5);
+/// assert_eq!(Some(0.0), zero.next());
+/// assert_eq!(None, zero.next());
+/// ```
+///
+/// [`Linspace`]: struct.Linspace.html
+#[derive(Debug, Copy, Clone)]
+pub struct Stepper {
+    t: f64,
+    dt: f64,
+}
+
+impl Stepper {
+    /// Create a stepper which steps from 0 to 1 with the given stepsize
+    pub fn new(dt: f64) -> Self {
+        Stepper {
+            t: 0., dt,
+        }
+    }
+
+    /// Create a stepper which steps from 0 to 1 inclusive with approximately `n` steps
+    ///
+    /// # Examples
+    ///
+    /// The stepper will tend to under-estimate the correct number of steps and stop right before
+    /// getting to `1.0` due to limits of numerical percision.  Usually, the total is one less than
+    /// the provided number of elements.
+    ///
+    /// ```
+    /// # use camber::Stepper;
+    /// # let n = 100;
+    /// let total = Stepper::with_numel(n).count();
+    /// assert!(total as f64 / n as f64 > 0.99);
+    /// ```
+    ///
+    /// If the exact number of elements is important, use [`Linspace`] instead.
+    ///
+    /// When asked to provide only one step, the stepper will return 0 once.
+    ///
+    /// ```
+    /// # use camber::Stepper;
+    /// let mut zero = Stepper::with_numel(1);
+    /// assert_eq!(Some(0.0), zero.next());
+    /// assert_eq!(None, zero.next());
+    /// ```
+    ///
+    /// A number of elements of zero will return `None` forever.
+    ///
+    /// ```
+    /// # use camber::Stepper;
+    /// let mut none = Stepper::with_numel(0);
+    /// assert_eq!(None, none.next());
+    /// assert_eq!(None, none.next());
+    /// assert_eq!(None, none.next());
+    /// assert_eq!(None, none.next());
+    /// ```
+    ///
+    /// [`Linspace`]: struct.Linspace.html
+    pub fn with_numel(n: usize) -> Self {
+        let dt = if n > 1 {
+            1. / (n-1) as f64
+        } else {
+            2.
+        };
+
+        Stepper {
+            t: if n == 0 {2.} else {0.},
+            dt,
+        }
+    }
+
+    pub fn restart(&mut self) -> &Self {
+        self.t = 0.;
+        self
+    }
+}
+
+impl Iterator for Stepper {
+    type Item = f64;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.t > 1. {
+            None
+        } else {
+            let t = self.t;
+            self.t += self.dt;
+            Some(t)
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let min = (1f64 - self.t) / self.dt;
+        let max = 1f64 / self.dt;
+        (min as usize + 1, Some(max as usize + 1))
+    }
+}
+
+#[cfg(test)]
+mod stepper {
+    use float_cmp::ApproxEq;
+    use proptest::prelude::*;
+    use std::f64::EPSILON;
+    use super::Stepper;
+
+    fn arb_length() -> impl Strategy<Value = usize> {
+        1..1_000_000usize
+    }
+
+    fn is_bounds(el: f64, min: f64, max: f64) -> bool {
+        el.approx_eq(&min, 3.*EPSILON, 3) || el.approx_eq(&max, 3.*EPSILON, 3)
+    }
+
+    prop_compose! {
+        fn arb_hint()
+            (n in 1..100_000usize)
+            (hint in (Just(n), 0..n))
+        -> (usize, usize) {
+            hint
+        }
+    }
+
+    proptest! {
+
+        #[test]
+        fn respects_boundaries(n in arb_length()) {
+            let stepper = Stepper::with_numel(n);
+            for el in stepper {
+                let in_bounds = (0. < el && el < 1.) || is_bounds(el, 0., 1.);
+                assert!(in_bounds, "{:e} outside range [0, 1]", el);
+            }
+        }
+
+        #[test]
+        fn size_hint((n, c) in arb_hint()) {
+            let mut s = Stepper::with_numel(n);
+            print!("{:?} yields {:?} => ", s, s.size_hint());
+            for _ in 0..c { s.next(); }
+            if let (min, Some(max)) = s.size_hint() {
+                let count = s.count();
+                println!("{:?}, count {}", (min, max), count);
+                assert!(min.max(count) - count.min(min) < 2);
+                assert!(max.max(n) - n.min(max) < 2);
+            } else {
+                panic!();
+            }
+        }
+
+        #[test]
+        fn approx_right_numel(n in 1..100_000usize) {
+            let total = Stepper::with_numel(n).count();
+            let pass = if n > 100 {
+                let proportion = total as f64 / n as f64;
+                proportion > 0.99
+            } else {
+                total + 1 == n || total == n
+            };
+            assert!(pass, "total {} doesn't approximate set number of elements {}", total, n);
+        }
+    }
+}
+
 #[inline(always)]
 fn lerp(a: f64, b: f64, t: f64) -> f64 {
     a*(1.-t) + b*t
@@ -102,13 +294,17 @@ fn lerp(a: f64, b: f64, t: f64) -> f64 {
 /// - `end`: The last value of the range
 /// - `numel`: The number of elements in the range
 ///
+/// # See Also
+///
+/// - [`Linspace`]
+///
 /// # Examples
 ///
 /// To get 100 floating point numbers between zero and one, including zero and
 /// one, we can do:
 ///
 /// ```
-/// # use camber::utility::linspace;
+/// # use camber::linspace;
 /// linspace(0.,1.,100);
 /// ```
 ///
@@ -116,7 +312,7 @@ fn lerp(a: f64, b: f64, t: f64) -> f64 {
 /// range of x values
 ///
 /// ```
-/// # use camber::utility::{linspace, poly_eval};
+/// # use camber::{linspace, poly_eval};
 /// let xs = linspace(0.,1.,100);
 /// // x^3
 /// let poly = [1.,0.,0.];
@@ -124,6 +320,8 @@ fn lerp(a: f64, b: f64, t: f64) -> f64 {
 ///     .map(|t| poly_eval(&poly,*t)) // f(x) = x^2
 ///     .collect();
 /// ```
+///
+/// [`Linspace`]: struct.Linspace.html
 pub fn linspace(start: f64, end: f64, numel: u32) -> Vec<f64> {
     if numel == 0 { return Vec::new(); }
     // Given some desired start _s_ and end _e_, parameterize
@@ -156,6 +354,13 @@ mod linspace {
     }
 
     #[test]
+    fn backwards() {
+        let xs = linspace(2., -2., 2);
+        assert_eq!(xs[0], 2.);
+        assert_eq!(xs[1], -2.);
+    }
+
+    #[test]
     fn constant_range() {
         for el in linspace(1.,1.,1000000) {
             assert_eq!(el,1.);
@@ -182,12 +387,19 @@ mod linspace {
 /// to stay within the start and end bounds.  It's useful for providing linear ranges over which to
 /// evaluate 1D transforms or polynomials.
 ///
+/// In addition to [`Iterator`], `Linspace` implements [`DoubleEndedIterator`].
+///
+/// # See Also
+///
+/// - [`Stepper`]
+/// - [`linspace`]
+///
 /// # Examples
 ///
 /// A range with zero elements simply `None` forever.
 ///
 /// ```
-/// use camber::utility::Linspace;
+/// use camber::Linspace;
 ///
 /// let mut empty = Linspace::new(1., -1., 0);
 /// assert_eq!(empty.next(), None);
@@ -197,17 +409,19 @@ mod linspace {
 /// It's also possible to create a range of `t` values from which to evaluate a 1D polynomial.
 ///
 /// ```
-/// # use camber::utility::Linspace;
-/// use camber::utility::poly_eval;
+/// # use camber::Linspace;
+/// use camber::poly_eval;
 ///
 /// let mut ts = Linspace::new(-1., 1., 50);
 /// let coeffients = [1., 5., 32., 1.];
-/// let ys: Vec<f64> = ts.map(|t| poly_eval(&coeffients, t)).collect();
+/// let ts: Vec<f64> = ts.map(|t| poly_eval(&coeffients, t)).collect();
 /// ```
 ///
-/// This is better than using the `linspace` function as it does not allocate a vector which could
-/// be wastefull
-#[derive(Debug, Clone, Copy)]
+/// [`linspace`]: fn.linspace.html
+/// [`Stepper`]: struct.Stepper.html
+/// [`DoubleEndedIterator`]: https://doc.rust-lang.org/std/iter/trait.DoubleEndedIterator.html
+/// [`Iterator`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html
+#[derive(Debug, Copy, Clone)]
 pub struct Linspace {
     start: f64,
     end: f64,
@@ -222,7 +436,7 @@ impl Linspace {
     /// example with 100 elements:
     ///
     /// ```
-    /// # use camber::utility::Linspace;
+    /// # use camber::Linspace;
     /// let mut lin = Linspace::new(0., 1., 100);
     /// assert_eq!(lin.count(), 100);
     /// ```
@@ -238,6 +452,47 @@ impl Linspace {
             numel,
             t,
         }
+    }
+
+    /// Create inclusive range iterator which starts at the end
+    ///
+    /// # Examples
+    ///
+    /// When initialized this way, no forward elements will be yielded
+    ///
+    /// ```
+    /// # use camber::Linspace;
+    /// let mut lin = Linspace::from_end(0., 1., 2);
+    /// assert_eq!(lin.next(), None);
+    /// ```
+    ///
+    /// When moving backwards with `next_back`, will behave as with `next`, only moving from the
+    /// end element to the start element.
+    ///
+    /// ```
+    /// # use camber::Linspace;
+    /// let mut lin = Linspace::from_end(0., 1., 2);
+    ///
+    /// // 2 backwards elements
+    /// assert_eq!(lin.next_back(), Some(1.));
+    /// assert_eq!(lin.next_back(), Some(0.));
+    ///
+    /// assert_eq!(lin.next_back(), None);
+    /// ```
+    pub fn from_end(start: f64, end: f64, numel: usize) -> Self {
+        let mut s = Linspace::new(start, end, numel);
+        s.t = s.numel;
+        s
+    }
+
+    /// Inclusive range iterator over the range 0 to 1 with the desired number of elements
+    ///
+    /// If numerical precision and the exact number of elements is less important than speed, try
+    /// [`Stepper`] instead.
+    ///
+    /// [`Stepper`]: struct.Stepper.html
+    pub fn normal(numel: usize) -> Self {
+        Self::new(0., 1., numel)
     }
 
 
@@ -263,7 +518,7 @@ impl Linspace {
     /// Start over again from the original `start` value
     ///
     /// ```
-    /// # use camber::utility::Linspace;
+    /// # use camber::Linspace;
     /// let mut lin = Linspace::new(0., 1., 2);
     ///
     /// // Consume all of the elements
@@ -309,12 +564,28 @@ impl Iterator for Linspace {
     }
 }
 
+impl DoubleEndedIterator for Linspace {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if 0 == self.t {
+            None
+        } else {
+            self.t -= 1;
+            let t = Self::t_n(self.t, self.numel);
+            Some(lerp(self.start, self.end, t))
+        }
+    }
+}
+
 #[cfg(test)]
 mod linspace_iterator {
     use float_cmp::ApproxEq;
     use proptest::prelude::*;
     use std::f64::EPSILON;
     use super::Linspace;
+
+    fn is_bounds(el: f64, min: f64, max: f64) -> bool {
+        el.approx_eq(&min, 3.*EPSILON, 3) || el.approx_eq(&max, 3.*EPSILON, 3)
+    }
 
     fn arb_bounds() -> impl Strategy<Value = (f64, f64)> {
         (any::<f64>(), any::<f64>())
@@ -384,8 +655,7 @@ mod linspace_iterator {
             let linspace = Linspace::new(start, end, n);
             for el in linspace {
                 assert! {
-                    (min < el && el < max) ||
-                        (el.approx_eq(&min, 3.*EPSILON, 3) || el.approx_eq(&max, 3.*EPSILON, 3)),
+                    (min < el && el < max) || is_bounds(el, min, max),
                     "el {:e} outside range [{:e}, {:e}]",
                     el,
                     min,
