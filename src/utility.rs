@@ -264,8 +264,12 @@ mod stepper {
         #[test]
         fn approx_right_numel(n in 1..100_000usize) {
             let total = Stepper::with_numel(n).count();
-            let proportion = total as f64 / n as f64;
-            let pass = proportion > 0.95;
+            let pass = if n > 100 {
+                let proportion = total as f64 / n as f64;
+                proportion > 0.99
+            } else {
+                total + 1 == n || total == n
+            };
             assert!(pass, "total {} doesn't approximate set number of elements {}", total, n);
         }
     }
