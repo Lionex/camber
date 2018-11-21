@@ -51,31 +51,37 @@ def_ease!{
     smooth_start_i i, t => t.powf(i)
 }
 
+macro_rules! flip_hv {
+    ($f:ident, $t:ident) => {
+        flip($f(flip($t)))
+    }
+}
+
 // Smooth stop functions
 def_ease! {
     /// _1 - (1 - t)^2_
-    smooth_stop_2 t => flip(smooth_start_2(flip(t))),
+    smooth_stop_2 t => flip_hv!(smooth_start_2, t),
 
     /// _1 - (1 - t)^3_
-    smooth_stop_3 t => flip(smooth_start_3(flip(t))),
+    smooth_stop_3 t => flip_hv!(smooth_start_3, t),
 
     /// _1 - (1 - t)^4_
-    smooth_stop_4 t => flip(smooth_start_4(flip(t))),
+    smooth_stop_4 t => flip_hv!(smooth_start_4, t),
 
     /// _1 - (1 - t)^5_
-    smooth_stop_5 t => flip(smooth_start_5(flip(t))),
+    smooth_stop_5 t => flip_hv!(smooth_start_5, t),
 
     /// _1 - (1 - t)^6_
-    smooth_stop_6 t => flip(smooth_start_6(flip(t))),
+    smooth_stop_6 t => flip_hv!(smooth_start_6, t),
 
     /// _1 - (1 - t)^7_
-    smooth_stop_7 t => flip(smooth_start_7(flip(t))),
+    smooth_stop_7 t => flip_hv!(smooth_start_7, t),
 
     /// _1 - (1 - t)^8_
-    smooth_stop_8 t => flip(smooth_start_8(flip(t))),
+    smooth_stop_8 t => flip_hv!(smooth_start_8, t),
 
     /// _1 - (1 - t)^9_
-    smooth_stop_9 t => flip(smooth_start_9(flip(t))),
+    smooth_stop_9 t => flip_hv!(smooth_start_9, t),
 
     /// _1 - (1 - t)^i_
     smooth_stop_i i, t => flip(smooth_start_i(i, flip(t)))
