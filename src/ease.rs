@@ -11,6 +11,7 @@ macro_rules! def_ease {
     ( $( $(#[$attr:meta])* $name:ident $($t:ident),+ => $expr:expr ),+ ) => {
         $(
             $(#[$attr])*
+            #[inline]
             pub fn $name(
                 $($t: f64,)+
             ) -> f64 {
