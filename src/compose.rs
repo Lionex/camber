@@ -33,3 +33,9 @@
 pub fn flip(t: f64) -> f64 {
     1. - t
 }
+
+
+#[inline]
+pub fn mix(a: f64, b: f64, weight: f64) -> f64 {
+    a + weight*(b-a)
+}

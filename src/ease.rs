@@ -5,7 +5,7 @@ A set of functions which take a parameter `t`, which is between `0` and `1` (or 
 
  */
 
-use compose::{ flip };
+use compose::{ flip, mix };
 
 macro_rules! def_ease {
     ( $( $(#[$attr:meta])* $name:ident $($t:ident),+ => $expr:expr ),+ ) => {
@@ -85,4 +85,40 @@ def_ease! {
 
     /// _1 - (1 - t)^i_
     smooth_stop_i i, t => flip(smooth_start_i(i, flip(t)))
+}
+
+// Define smooth step functions
+
+macro_rules! def_smooth_step {
+    ($( $(#[$attr:meta])* $name:ident [$a:ident $b:ident] ),+) => {
+        $(
+            def_ease!($name t => mix($a(t), $b(t), t));
+        )+
+    }
+}
+
+def_smooth_step! {
+    /// Slowest at the start and at the end, fastest in the center
+    smooth_step_2 [smooth_start_2 smooth_stop_2],
+
+    /// Slowest at the start and at the end, fastest in the center
+    smooth_step_3 [smooth_start_3 smooth_stop_3],
+
+    /// Slowest at the start and at the end, fastest in the center
+    smooth_step_4 [smooth_start_4 smooth_stop_4],
+
+    /// Slowest at the start and at the end, fastest in the center
+    smooth_step_5 [smooth_start_5 smooth_stop_5],
+
+    /// Slowest at the start and at the end, fastest in the center
+    smooth_step_6 [smooth_start_6 smooth_stop_6],
+
+    /// Slowest at the start and at the end, fastest in the center
+    smooth_step_7 [smooth_start_7 smooth_stop_7],
+
+    /// Slowest at the start and at the end, fastest in the center
+    smooth_step_8 [smooth_start_8 smooth_stop_8],
+
+    /// Slowest at the start and at the end, fastest in the center
+    smooth_step_9 [smooth_start_9 smooth_stop_9]
 }
