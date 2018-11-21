@@ -10,6 +10,7 @@ extern crate proptest;
 extern crate float_cmp;
 
 pub mod ease;
+pub mod compose;
 
 mod utility;
 pub use utility::*;
