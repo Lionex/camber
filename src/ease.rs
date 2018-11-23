@@ -45,10 +45,13 @@ def_ease!{
     smooth_start_8 t => t.powi(8),
 
     /// _t^9_
-    smooth_start_9 t => t.powi(9),
+    smooth_start_9 t => t.powi(9)
+}
 
-    /// _t^i_
-    smooth_start_i i, t => t.powf(i)
+/// _t^i_
+#[inline]
+pub fn smooth_start_i(i: i32, t: f64) -> f64 {
+    t.powi(i)
 }
 
 macro_rules! flip_hv {
@@ -81,10 +84,13 @@ def_ease! {
     smooth_stop_8 t => flip_hv!(smooth_start_8, t),
 
     /// _1 - (1 - t)^9_
-    smooth_stop_9 t => flip_hv!(smooth_start_9, t),
+    smooth_stop_9 t => flip_hv!(smooth_start_9, t)
+}
 
-    /// _1 - (1 - t)^i_
-    smooth_stop_i i, t => flip(smooth_start_i(i, flip(t)))
+/// _1 - (1 - t)^i_
+#[inline]
+pub fn smooth_stop_i(i: i32, t: f64) -> f64 {
+    flip(smooth_start_i(i, flip(t)))
 }
 
 // Define smooth step functions
@@ -127,6 +133,6 @@ def_smooth_step! {
 }
 
 #[inline]
-pub fn smooth_step_i(i: f64, t: f64) -> f64 {
+pub fn smooth_step_i(i: i32, t: f64) -> f64 {
     mix(smooth_start_i(i, t), smooth_stop_i(i, t), t)
 }
