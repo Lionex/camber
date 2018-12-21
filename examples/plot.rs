@@ -5,7 +5,7 @@ use plotlib::style::Line;
 use plotlib::page::Page;
 use plotlib::view::View;
 use plotlib::function::{ Function, Style };
-use camber::utility::poly_eval;
+use camber::poly_eval;
 
 fn main() {
     let linear = [1., 0.];
