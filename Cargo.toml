@@ -7,10 +7,13 @@ readme  = "README.md"
 
 repository = "https://github.com/Lionex/camber.git"
 
-keywords = ["curve", "interpolation"]
+keywords = ["curve", "interpolation", "easing"]
 
 [dependencies]
 
 [dev-dependencies]
 proptest = "^0.8.7"
 float-cmp = "^0.4.0"
+
+# Example dependencies
+plotlib = "^0.3"
