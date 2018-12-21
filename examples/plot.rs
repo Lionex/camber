@@ -6,6 +6,7 @@ use plotlib::page::Page;
 use plotlib::view::View;
 use plotlib::function::{ Function, Style };
 use camber::poly_eval;
+use camber::ease::*;
 
 /// `poly_eval` can be used to create simple polynomials from their coefficients
 ///
@@ -28,13 +29,13 @@ fn poly_eval_demo() {
         .add(&linear)
         .add(&quadratic)
         .add(&cubic);
-    Page::single(&v).save("polyeval_1.svg");
+    Page::single(&v).save("img/polyeval_1.svg");
 
     let complicated = [-2., -1., 1., -0.1];
     let complicated = Function::new(|x| poly_eval(&complicated, x), -1., 1.)
     .style(Style::new().colour("blue"));
     let v = View::new().add(&complicated);
-    Page::single(&v).save("polyeval_2.svg");
+    Page::single(&v).save("img/polyeval_2.svg");
 }
 
 fn main() {
