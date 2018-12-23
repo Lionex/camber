@@ -6,6 +6,8 @@
 
 Camber is a library of fast, composeable, non-linear, 1D transforms, also known as easing functions or normalized utility functions.
 
+![Smooth step plot](img/smooth_step_3.svg)
+
 ## References
 
 - [Math for Game Programmers: Fast and Funky 1D Nonlinear Transformations][gdc_transformations]
